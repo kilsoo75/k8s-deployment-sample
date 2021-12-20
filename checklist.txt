@@ -1,0 +1,21 @@
+0. tomcat > conf > server.xml
+  <Context docBase="/app/aims-web" path="" reloadable="true" />
+
+1. WEB-INF/classes/web.xml
+ <context-param>
+  <param-name>spring.profiles.active</param-name>
+  <param-value>production</param-value>
+</context-param>
+
+2. WEB-INF/classes/META-INF/properties/configuration.properties
+  file.location.production=/app/aims-web
+
+3. logback.xml
+  commnected following 3 configuration for logging
+  <appender-ref ref="file_fwk" />
+  <appender-ref ref="logstash_fwk" />
+  <appender-ref ref="file_error" />
+
+4. WEB-INF/classes/META-INF/properties/instance/instance_productionAP.properties
+  #if you want to store the logs into the file system
+  log.path=/app/logs/sprout-aims-web

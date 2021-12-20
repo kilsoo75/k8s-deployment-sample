@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    svc: aims-web
+    component: aims-web-app    
+  name: aims-web-app
+  namespace: aims-web
+spec:
+  replicas: 1 
+  selector:
+    matchLabels:
+      svc: aims-web
+      component: aims-web-app
+  template:
+    metadata:
+      labels:
+        svc: aims-web
+        component: aims-web-app
+      name: aims-web-app
+    spec:
+      #securityContext:
+        #runAsUser: 1000
+        #runAsGroup: 3000
+        #fsGroup: 2000
+        #runAsNonRoot: true
+      containers:
+      - image: dedicatedprodacr.azurecr.io/aims/aims-web:prod-20211221
+        name: aims-web-tomcat
+        securityContext:
+          allowPrivilegeEscalation: false
+        imagePullPolicy: Always
+        env:
+          - name: MY_POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: LOG_TARGET
+            value: "/logs/$(MY_POD_NAME)"
+          - name: JAVA_TOOL_OPTIONS
+            #value: "-Dspring.profiles.active=production -Duser.language=ko -Duser.region=KR -Dfile.encoding=EUC-KR"
+            #
+            #java 11
+            #value: "-Dspring.profiles.active=production -Dfile.encoding=EUC-KR -Xms1536m -Xmx1536m -Xlog:gc*,gc+phases=debug:file=$(LOG_TARGET)/gc/gc.log:time,pid,tags:filecount=10,filesize=20m -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$(LOG_TARGET)/dump -Dlog4j2.formatMsgNoLookups=true"
+            #
+            #java8
+            value: "-Dspring.profiles.active=production -Dfile.encoding=EUC-KR -Xms1536m -Xmx1536m -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=10 -XX:GCLogFileSize=20m -XX:+PrintGCDetails -XX:+PrintGCTimeStamps -XX:+PrintGCDateStamps -XX:+PrintGCCause -Xloggc:$(LOG_TARGET)/gc/gc.log -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath=$(LOG_TARGET)/dump -Dlog4j2.formatMsgNoLookups=true"
+        ports:
+        - containerPort: 80
+          name: http
+          protocol: TCP
+        resources:
+          limits:
+            cpu: 1500m
+            memory: 2Gi
+          requests:
+            cpu: "1"
+            memory: 1Gi
+        volumeMounts:
+        - mountPath: "/app/aims-attach/resources/attach"
+          name: file-attach
+        - mountPath: "/app/aims-logs"
+          name: logs
+      volumes:
+      - name: file-attach
+        persistentVolumeClaim:
+          claimName: aims-attach-pvc
+      - name: logs
+        persistentVolumeClaim:
+          claimName: aims-logs-pvc

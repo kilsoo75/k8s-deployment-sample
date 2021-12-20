@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    svc: aims-web
+  name: aims-web
+  namespace: aims-web
+spec:
+  ports:
+  - name: http
+    port: 80
+    protocol: TCP
+    targetPort: 80
+  selector:
+    svc: aims-web
+    component: aims-web-app
+  type: ClusterIP
